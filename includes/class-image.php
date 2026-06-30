@@ -1,4 +1,10 @@
 <?php
+/**
+ * 画像ダウンロード・メディアライブラリ登録クラスを定義するファイル。
+ *
+ * @package NExT_Wix2WP
+ */
+
 defined( 'ABSPATH' ) || exit;
 
 /**
@@ -59,10 +65,10 @@ class NExT_Wix2WP_Image {
 	 * @return string
 	 */
 	public function normalize_url( $url ) {
-		// /v1/fill/... や /v1/fit/... 以降を除去
-		$url = preg_replace( '#/v1/(fill|fit|crop)/[^/]+/(.+)$#', '/$2', $url );
+		// /v1/fill/... 等の変換パス以降をすべて除去し、/media/<id> のオリジナル URL に戻す。
+		$url = preg_replace( '#/v1/.*$#', '', $url );
 
-		// クエリパラメータを除去
+		// クエリパラメータを除去する。
 		$url = strtok( $url, '?' );
 
 		return $url;
@@ -138,7 +144,11 @@ class NExT_Wix2WP_Image {
 			return $tmp;
 		}
 
-		$filename  = basename( wp_parse_url( $url, PHP_URL_PATH ) );
+		$filename = sanitize_file_name( basename( wp_parse_url( $url, PHP_URL_PATH ) ) );
+		if ( empty( $filename ) ) {
+			$filename = 'wix-image-' . md5( $url ) . '.jpg';
+		}
+
 		$file_array = array(
 			'name'     => $filename,
 			'tmp_name' => $tmp,
@@ -146,9 +156,9 @@ class NExT_Wix2WP_Image {
 
 		$attachment_id = media_handle_sideload( $file_array, $post_id );
 
-		// 一時ファイルを削除 (失敗してもファイルが残らないように)
+		// 一時ファイルを削除 (失敗してもファイルが残らないように).
 		if ( is_wp_error( $attachment_id ) ) {
-			@unlink( $tmp );
+			wp_delete_file( $tmp );
 		}
 
 		return $attachment_id;

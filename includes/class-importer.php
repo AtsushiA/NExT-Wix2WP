@@ -1,4 +1,10 @@
 <?php
+/**
+ * 投稿インポート処理クラスを定義するファイル。
+ *
+ * @package NExT_Wix2WP
+ */
+
 defined( 'ABSPATH' ) || exit;
 
 /**
@@ -80,7 +86,7 @@ class NExT_Wix2WP_Importer {
 		// 重複チェック
 		$existing_id = $this->find_existing( $wix_id, $slug );
 		if ( $existing_id && ! $options['force'] ) {
-			$this->stats['skipped']++;
+			++$this->stats['skipped'];
 			return array(
 				'result'  => 'skipped',
 				'post_id' => $existing_id,
@@ -93,7 +99,7 @@ class NExT_Wix2WP_Importer {
 			$action = $existing_id ? '更新予定' : 'インポート予定';
 			return array(
 				'result'  => 'dry_run',
-				'post_id' => $existing_id ?: 0,
+				'post_id' => $existing_id ? $existing_id : 0,
 				'message' => "[DRY RUN] {$action}: {$title} ({$post_date})",
 			);
 		}
@@ -124,13 +130,13 @@ class NExT_Wix2WP_Importer {
 
 		if ( $existing_id ) {
 			$post_data['ID'] = $existing_id;
-			$post_id = wp_update_post( $post_data, true );
+			$post_id         = wp_update_post( $post_data, true );
 		} else {
 			$post_id = wp_insert_post( $post_data, true );
 		}
 
 		if ( is_wp_error( $post_id ) ) {
-			$this->stats['errors']++;
+			++$this->stats['errors'];
 			return array(
 				'result'  => 'error',
 				'post_id' => 0,
@@ -158,14 +164,19 @@ class NExT_Wix2WP_Importer {
 		// 本文内の画像は converter で処理済みだが、post_id が確定してから再保存が必要な場合はここで対応
 		if ( ! $options['skip_images'] && ! empty( $rich ) ) {
 			$post_content = $this->converter->convert( $rich, $post_id, $post_date );
-			wp_update_post( array( 'ID' => $post_id, 'post_content' => $post_content ) );
+			wp_update_post(
+				array(
+					'ID'           => $post_id,
+					'post_content' => $post_content,
+				)
+			);
 		}
 
 		if ( $existing_id ) {
-			$this->stats['updated']++;
+			++$this->stats['updated'];
 			$result = 'updated';
 		} else {
-			$this->stats['imported']++;
+			++$this->stats['imported'];
 			$result = 'imported';
 		}
 
@@ -199,9 +210,9 @@ class NExT_Wix2WP_Importer {
 		$term_ids = array();
 
 		foreach ( $categories as $cat ) {
-			$wix_cat_id = isset( $cat['id'] )    ? $cat['id']    : '';
+			$wix_cat_id = isset( $cat['id'] ) ? $cat['id'] : '';
 			$label      = isset( $cat['label'] ) ? $cat['label'] : '';
-			$cat_slug   = isset( $cat['slug'] )  ? $cat['slug']  : '';
+			$cat_slug   = isset( $cat['slug'] ) ? $cat['slug'] : '';
 
 			if ( ! $label ) {
 				continue;
@@ -287,6 +298,9 @@ class NExT_Wix2WP_Importer {
 			return current_time( 'mysql' );
 		}
 		$timestamp = strtotime( $iso_date );
+		if ( false === $timestamp ) {
+			return current_time( 'mysql' );
+		}
 		return get_date_from_gmt( gmdate( 'Y-m-d H:i:s', $timestamp ) );
 	}
 
@@ -300,7 +314,11 @@ class NExT_Wix2WP_Importer {
 		if ( ! $iso_date ) {
 			return current_time( 'mysql', true );
 		}
-		return gmdate( 'Y-m-d H:i:s', strtotime( $iso_date ) );
+		$timestamp = strtotime( $iso_date );
+		if ( false === $timestamp ) {
+			return current_time( 'mysql', true );
+		}
+		return gmdate( 'Y-m-d H:i:s', $timestamp );
 	}
 
 	// -------------------------------------------------------------------------

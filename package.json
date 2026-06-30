@@ -1,0 +1,14 @@
+{
+	"name": "next-wix2wp",
+	"version": "1.0.0",
+	"description": "WixブログをWordPressの投稿としてインポートするWP-CLIプラグイン",
+	"private": true,
+	"license": "GPL-2.0-or-later",
+	"scripts": {
+		"prepare": "husky"
+	},
+	"devDependencies": {
+		"husky": "^9.1.7",
+		"lint-staged": "^15.2.10"
+	}
+}

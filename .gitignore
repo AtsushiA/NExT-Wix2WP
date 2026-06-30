@@ -18,6 +18,10 @@ vendor/
 # ビルド成果物
 *.zip
 dist/
+build/
+
+# テストキャッシュ
+.phpunit.result.cache
 
 # PHP
 *.log

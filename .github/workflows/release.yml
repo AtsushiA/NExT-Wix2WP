@@ -1,0 +1,31 @@
+name: Release
+
+on:
+  push:
+    tags:
+      - '*.*.*'
+
+permissions:
+  contents: write
+
+jobs:
+  release:
+    name: Build and publish plugin zip
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Build distributable zip
+        env:
+          SLUG: NExT-Wix2WP
+        run: |
+          mkdir -p "build/${SLUG}"
+          rsync -rc --exclude-from='.distignore' ./ "build/${SLUG}/"
+          ( cd build && zip -r "../${SLUG}.zip" "${SLUG}" )
+          ls -la "${SLUG}.zip"
+
+      - name: Create GitHub Release
+        uses: softprops/action-gh-release@v2
+        with:
+          files: NExT-Wix2WP.zip
+          generate_release_notes: true

@@ -64,9 +64,15 @@ class NExT_Wix2WP_API {
 	 * @param string $instance  Instance トークン（省略時は RSS にフォールバック）.
 	 */
 	public function __construct( $blog_url, $page_size = 20, $instance = '' ) {
-		$parsed          = wp_parse_url( $blog_url );
-		$this->base_url  = $parsed['scheme'] . '://' . $parsed['host'];
-		$this->blog_url  = $blog_url;
+		$parsed = wp_parse_url( $blog_url );
+
+		if ( ! empty( $parsed['scheme'] ) && ! empty( $parsed['host'] )
+			&& in_array( $parsed['scheme'], array( 'http', 'https' ), true )
+		) {
+			$this->base_url = $parsed['scheme'] . '://' . $parsed['host'];
+			$this->blog_url = $blog_url;
+		}
+
 		$this->page_size = min( (int) $page_size, 100 );
 		$this->instance  = $instance;
 	}
@@ -81,6 +87,10 @@ class NExT_Wix2WP_API {
 	 * @return array[]|WP_Error 記事データの配列、またはエラー.
 	 */
 	public function get_all_posts( $limit = 0 ) {
+		if ( ! $this->base_url ) {
+			return new WP_Error( 'invalid_url', '無効なブログ URL です。http または https の URL を指定してください。' );
+		}
+
 		if ( $this->instance ) {
 			return $this->get_posts_via_api( $limit );
 		}
@@ -183,8 +193,8 @@ class NExT_Wix2WP_API {
 
 		$data = json_decode( wp_remote_retrieve_body( $response ), true );
 
-		if ( ! is_array( $data ) ) {
-			return new WP_Error( 'wix_api_parse_error', 'API レスポンスの JSON パースに失敗しました。' );
+		if ( JSON_ERROR_NONE !== json_last_error() || ! is_array( $data ) ) {
+			return new WP_Error( 'wix_api_parse_error', 'API レスポンスの JSON パースに失敗しました: ' . json_last_error_msg() );
 		}
 
 		// レスポンスの階層: postFeedPage > posts > posts (配列) と pagingMetaData > total.
@@ -403,7 +413,12 @@ class NExT_Wix2WP_API {
 			);
 		}
 
-		$xml = simplexml_load_string( wp_remote_retrieve_body( $response ) );
+		// LIBXML_NONET: XML パース中の外部ネットワークアクセスを禁止する (XXE 対策).
+		$xml = simplexml_load_string(
+			wp_remote_retrieve_body( $response ),
+			'SimpleXMLElement',
+			LIBXML_NONET | LIBXML_NOERROR
+		);
 		if ( false === $xml ) {
 			return new WP_Error( 'rss_parse_error', 'RSS XML のパースに失敗しました。' );
 		}

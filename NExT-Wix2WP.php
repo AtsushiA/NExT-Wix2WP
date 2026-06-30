@@ -1,12 +1,18 @@
 <?php
 /**
- * Plugin Name: NExT Wix2WP
- * Plugin URI:  https://github.com/
- * Description: WixブログをWordPressの投稿としてインポートするWP-CLIプラグイン
- * Version:     1.0.0
- * Author:      NExT
- * License:     GPL-2.0-or-later
- * Text Domain: next-wix2wp
+ * Plugin Name:       NExT Wix2WP
+ * Plugin URI:        https://github.com/AtsushiA/NExT-Wix2WP
+ * Description:       WixブログをWordPressの投稿としてインポートするWP-CLIプラグイン
+ * Version:           1.0.0
+ * Requires at least: 6.0
+ * Requires PHP:      7.4
+ * Author:            NExT-Season
+ * Author URI:        https://next-season.net/
+ * License:           GPL-2.0-or-later
+ * License URI:       https://www.gnu.org/licenses/gpl-2.0.html
+ * Text Domain:       next-wix2wp
+ *
+ * @package NExT_Wix2WP
  */
 
 defined( 'ABSPATH' ) || exit;

@@ -11,14 +11,22 @@
 defined( 'ABSPATH' ) || exit;
 
 /**
- * 管理画面ページクラス
+ * Instance トークン管理用の管理画面ページ。
  */
 class NExT_Wix2WP_Admin {
 
-	/** @var string wp_options のキー */
+	/**
+	 * Options キー (wp_options)。
+	 *
+	 * @var string
+	 */
 	const OPTION_KEY = 'wix2wp_token_map';
 
-	/** @var string nonce アクション名 */
+	/**
+	 * Nonce アクション名。
+	 *
+	 * @var string
+	 */
 	const NONCE_ACTION = 'wix2wp_token_action';
 
 	/**
@@ -160,7 +168,9 @@ class NExT_Wix2WP_Admin {
 	 * @return string 'saved' | 'deleted' | 'error' | ''
 	 */
 	private function handle_post() {
-		if ( empty( $_POST['wix2wp_action'] ) ) {
+		// sanitize_key は小文字化するため strtoupper で大文字に戻す.
+		$request_method = isset( $_SERVER['REQUEST_METHOD'] ) ? strtoupper( sanitize_text_field( wp_unslash( $_SERVER['REQUEST_METHOD'] ) ) ) : '';
+		if ( 'POST' !== $request_method || empty( $_POST['wix2wp_action'] ) ) {
 			return '';
 		}
 
@@ -169,10 +179,16 @@ class NExT_Wix2WP_Admin {
 		$action = sanitize_key( wp_unslash( $_POST['wix2wp_action'] ) );
 
 		if ( 'save' === $action ) {
-			$url   = isset( $_POST['wix2wp_url'] ) ? esc_url_raw( trim( wp_unslash( $_POST['wix2wp_url'] ) ) ) : '';
-			$token = isset( $_POST['wix2wp_token'] ) ? sanitize_text_field( trim( wp_unslash( $_POST['wix2wp_token'] ) ) ) : '';
+			$url   = isset( $_POST['wix2wp_url'] ) ? esc_url_raw( trim( sanitize_text_field( wp_unslash( $_POST['wix2wp_url'] ) ) ) ) : '';
+			$token = isset( $_POST['wix2wp_token'] ) ? sanitize_text_field( wp_unslash( $_POST['wix2wp_token'] ) ) : '';
 
 			if ( ! $url || ! $token ) {
+				return 'error';
+			}
+
+			// http / https のみ許可する.
+			$parsed_scheme = wp_parse_url( $url, PHP_URL_SCHEME );
+			if ( ! in_array( $parsed_scheme, array( 'http', 'https' ), true ) ) {
 				return 'error';
 			}
 
@@ -183,7 +199,7 @@ class NExT_Wix2WP_Admin {
 		}
 
 		if ( 'delete' === $action ) {
-			$url = isset( $_POST['wix2wp_delete_url'] ) ? esc_url_raw( trim( wp_unslash( $_POST['wix2wp_delete_url'] ) ) ) : '';
+			$url = isset( $_POST['wix2wp_delete_url'] ) ? esc_url_raw( trim( sanitize_text_field( wp_unslash( $_POST['wix2wp_delete_url'] ) ) ) ) : '';
 			if ( $url ) {
 				$map = (array) get_option( self::OPTION_KEY, array() );
 				unset( $map[ $url ] );

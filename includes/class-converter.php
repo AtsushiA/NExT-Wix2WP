@@ -1,4 +1,10 @@
 <?php
+/**
+ * Wix Rich Content → Gutenberg ブロック変換クラスを定義するファイル。
+ *
+ * @package NExT_Wix2WP
+ */
+
 defined( 'ABSPATH' ) || exit;
 
 /**
@@ -42,7 +48,7 @@ class NExT_Wix2WP_Converter {
 		$blocks = array();
 		foreach ( $nodes as $node ) {
 			$block = $this->convert_node( $node );
-			if ( $block !== '' ) {
+			if ( '' !== $block ) {
 				$blocks[] = $block;
 			}
 		}
@@ -83,9 +89,9 @@ class NExT_Wix2WP_Converter {
 			case 'LINK_PREVIEW':
 				return $this->convert_link_preview( $node );
 			default:
-				// 未対応ノードはテキストを抽出して paragraph に
+				// 未対応ノードはテキストを抽出して paragraph に.
 				$text = $this->extract_text( $node );
-				if ( $text !== '' ) {
+				if ( '' !== $text ) {
 					return $this->wrap_block( 'core/paragraph', array(), '<p>' . $text . '</p>' );
 				}
 				return '';
@@ -96,14 +102,26 @@ class NExT_Wix2WP_Converter {
 	// ノード変換メソッド
 	// -------------------------------------------------------------------------
 
+	/**
+	 * PARAGRAPH ノードを core/paragraph ブロックに変換する。
+	 *
+	 * @param array $node Wix ノード配列。
+	 * @return string ブロック文字列（実体のない段落は空文字）。
+	 */
 	private function convert_paragraph( $node ) {
 		$html = $this->nodes_to_html( $node );
-		if ( trim( strip_tags( $html ) ) === '' ) {
+		if ( '' === trim( wp_strip_all_tags( $html ) ) ) {
 			return '';
 		}
 		return $this->wrap_block( 'core/paragraph', array(), '<p>' . $html . '</p>' );
 	}
 
+	/**
+	 * HEADING ノードを core/heading ブロックに変換する。
+	 *
+	 * @param array $node Wix ノード配列。
+	 * @return string ブロック文字列。
+	 */
 	private function convert_heading( $node ) {
 		$level = isset( $node['headingData']['level'] ) ? (int) $node['headingData']['level'] : 2;
 		$level = max( 1, min( 6, $level ) );
@@ -115,6 +133,14 @@ class NExT_Wix2WP_Converter {
 		);
 	}
 
+	/**
+	 * IMAGE ノードを core/image ブロックに変換する。
+	 *
+	 * 画像をメディアライブラリに取り込み、失敗時は元 URL の img タグにフォールバックする。
+	 *
+	 * @param array $node Wix ノード配列。
+	 * @return string ブロック文字列（画像 URL が無い場合は空文字）。
+	 */
 	private function convert_image( $node ) {
 		// imageData.image.src.id → Wix static CDN URL.
 		$src = '';
@@ -144,11 +170,11 @@ class NExT_Wix2WP_Converter {
 
 		if ( is_wp_error( $attachment_id ) ) {
 			// インポート失敗時は元 URL で img タグを生成
-			$img = '<img src="' . esc_url( $src ) . '" alt="' . $alt . '"/>';
+			$img = '<img src="' . esc_url( $src ) . '" alt="' . esc_attr( $alt ) . '"/>';
 		} else {
 			$img_url = wp_get_attachment_url( $attachment_id );
-			$img     = '<img src="' . esc_url( $img_url ) . '" alt="' . $alt . '"'
-				. ' class="wp-image-' . $attachment_id . '"/>';
+			$img     = '<img src="' . esc_url( $img_url ) . '" alt="' . esc_attr( $alt ) . '"'
+				. ' class="wp-image-' . (int) $attachment_id . '"/>';
 		}
 
 		$figure = '<figure class="wp-block-image">' . $img;
@@ -161,6 +187,12 @@ class NExT_Wix2WP_Converter {
 		return $this->wrap_block( 'core/image', $attrs, $figure );
 	}
 
+	/**
+	 * GALLERY ノードを core/gallery ブロックに変換する。
+	 *
+	 * @param array $node Wix ノード配列。
+	 * @return string ブロック文字列（有効な画像が無い場合は空文字）。
+	 */
 	private function convert_gallery( $node ) {
 		$items = isset( $node['nodes'] ) ? $node['nodes'] : array();
 		if ( empty( $items ) ) {
@@ -186,12 +218,12 @@ class NExT_Wix2WP_Converter {
 
 			if ( is_wp_error( $attachment_id ) ) {
 				$img_url = $src;
-				$img_tag = '<img src="' . esc_url( $img_url ) . '" alt="' . $alt . '"/>';
+				$img_tag = '<img src="' . esc_url( $img_url ) . '" alt="' . esc_attr( $alt ) . '"/>';
 				$attrs   = array();
 			} else {
 				$img_url = wp_get_attachment_url( $attachment_id );
-				$img_tag = '<img src="' . esc_url( $img_url ) . '" alt="' . $alt . '"'
-					. ' class="wp-image-' . $attachment_id . '"/>';
+				$img_tag = '<img src="' . esc_url( $img_url ) . '" alt="' . esc_attr( $alt ) . '"'
+					. ' class="wp-image-' . (int) $attachment_id . '"/>';
 				$attrs   = array( 'id' => $attachment_id );
 				$ids[]   = $attachment_id;
 			}
@@ -218,6 +250,12 @@ class NExT_Wix2WP_Converter {
 			. "\n<!-- /wp:gallery -->";
 	}
 
+	/**
+	 * VIDEO ノードを core/embed (video) ブロックに変換する。
+	 *
+	 * @param array $node Wix ノード配列。
+	 * @return string ブロック文字列（URL が無い場合は空文字）。
+	 */
 	private function convert_video( $node ) {
 		$url = isset( $node['data']['url'] ) ? $node['data']['url'] : '';
 		if ( ! $url ) {
@@ -226,17 +264,31 @@ class NExT_Wix2WP_Converter {
 		$esc_url = esc_url( $url );
 		return $this->wrap_block(
 			'core/embed',
-			array( 'url' => $url, 'type' => 'video' ),
+			array(
+				'url'  => $url,
+				'type' => 'video',
+			),
 			'<figure class="wp-block-embed is-type-video"><div class="wp-block-embed__wrapper">'
 			. $esc_url
 			. '</div></figure>'
 		);
 	}
 
+	/**
+	 * DIVIDER ノードを core/separator ブロックに変換する。
+	 *
+	 * @return string ブロック文字列。
+	 */
 	private function convert_divider() {
 		return $this->wrap_block( 'core/separator', array(), '<hr class="wp-block-separator has-alpha-channel-opacity"/>' );
 	}
 
+	/**
+	 * BLOCKQUOTE ノードを core/quote ブロックに変換する。
+	 *
+	 * @param array $node Wix ノード配列。
+	 * @return string ブロック文字列。
+	 */
 	private function convert_blockquote( $node ) {
 		$html = $this->nodes_to_html( $node );
 		return $this->wrap_block(
@@ -246,6 +298,12 @@ class NExT_Wix2WP_Converter {
 		);
 	}
 
+	/**
+	 * CODE_BLOCK ノードを core/code ブロックに変換する。
+	 *
+	 * @param array $node Wix ノード配列。
+	 * @return string ブロック文字列。
+	 */
 	private function convert_code( $node ) {
 		$text = $this->extract_text( $node );
 		return $this->wrap_block(
@@ -255,6 +313,13 @@ class NExT_Wix2WP_Converter {
 		);
 	}
 
+	/**
+	 * ORDERED_LIST / BULLETED_LIST ノードを core/list ブロックに変換する。
+	 *
+	 * @param array $node    Wix ノード配列。
+	 * @param bool  $ordered 順序付きリストなら true。
+	 * @return string ブロック文字列。
+	 */
 	private function convert_list( $node, $ordered ) {
 		$tag   = $ordered ? 'ol' : 'ul';
 		$items = isset( $node['nodes'] ) ? $node['nodes'] : array();
@@ -271,6 +336,12 @@ class NExT_Wix2WP_Converter {
 		);
 	}
 
+	/**
+	 * LINK_PREVIEW ノードを core/embed ブロックに変換する。
+	 *
+	 * @param array $node Wix ノード配列。
+	 * @return string ブロック文字列（URL が無い場合は空文字）。
+	 */
 	private function convert_link_preview( $node ) {
 		$url = isset( $node['data']['url'] ) ? $node['data']['url'] : '';
 		if ( ! $url ) {
@@ -325,7 +396,7 @@ class NExT_Wix2WP_Converter {
 	 * @return string
 	 */
 	private function apply_decorations( $text, $text_data ) {
-		$text = esc_html( $text );
+		$text        = esc_html( $text );
 		$decorations = isset( $text_data['decorations'] ) ? $text_data['decorations'] : array();
 
 		foreach ( $decorations as $dec ) {
@@ -348,7 +419,8 @@ class NExT_Wix2WP_Converter {
 					break;
 				case 'COLOR':
 					$color = isset( $dec['colorData']['foreground'] ) ? $dec['colorData']['foreground'] : '';
-					if ( $color ) {
+					// 安全な CSS カラー値のみ許可する（hex / rgb / rgba / hsl / 色名）.
+					if ( $color && preg_match( '/^(#[0-9a-fA-F]{3,8}|rgb\([^)]+\)|rgba\([^)]+\)|hsl\([^)]+\)|hsla\([^)]+\)|[a-zA-Z]+)$/', $color ) ) {
 						$text = '<span style="color:' . esc_attr( $color ) . '">' . $text . '</span>';
 					}
 					break;

@@ -208,6 +208,48 @@ NExT-Wix2WP/
 
 ---
 
+## 開発者向け
+
+### セットアップ
+
+```bash
+composer install   # phpcs / phpunit など開発依存をインストール
+npm install        # husky / lint-staged（コミット前 phpcs チェック）
+```
+
+ローカルでの実行は PHP 8.3 / 8.4 を想定しています。
+
+### コーディング規約（phpcs）
+
+```bash
+composer run phpcs    # WordPress コーディング規約チェック
+composer run phpcbf   # 自動修正
+```
+
+### テスト（phpunit）
+
+```bash
+# ユニットテスト（WordPress 非依存・Brain Monkey）
+composer run test:unit
+
+# 統合テスト（WordPress テストスイートが必要）
+bash bin/install-wp-tests.sh wordpress_test root root 127.0.0.1 latest
+composer run test:integration
+```
+
+### CI / リリース
+
+- `.github/workflows/ci.yml` — push / PR で phpcs・phpunit（WP 最新+6.8 × PHP 8.3/8.4 のマトリクス）・Plugin Check を実行
+- `.github/workflows/release.yml` — `1.0.0` 形式のタグ push で配布 zip を生成し GitHub Release に添付
+
+```bash
+# リリース例
+git tag 1.0.1
+git push origin 1.0.1
+```
+
+---
+
 ## ライセンス
 
 GPL-2.0-or-later

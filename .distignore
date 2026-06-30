@@ -1,0 +1,23 @@
+# 配布 zip に含めない開発用ファイル
+/.git
+/.github
+/.gitignore
+/.distignore
+/.husky
+/.lintstagedrc.js
+/.wp-env.json
+/bin
+/tests
+/build
+/node_modules
+/vendor
+/composer.json
+/composer.lock
+/package.json
+/package-lock.json
+/phpcs.xml.dist
+/phpunit.xml.dist
+/SPEC.md
+*.zip
+.phpunit.result.cache
+.DS_Store

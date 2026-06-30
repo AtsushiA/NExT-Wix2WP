@@ -1,0 +1,67 @@
+<?xml version="1.0"?>
+<ruleset name="NExT Wix2WP">
+	<description>NExT Wix2WP の WordPress コーディング規約設定</description>
+
+	<!-- 検査対象 -->
+	<file>.</file>
+
+	<!-- 検査除外ディレクトリ -->
+	<exclude-pattern>/vendor/</exclude-pattern>
+	<exclude-pattern>/node_modules/</exclude-pattern>
+	<exclude-pattern>/tests/</exclude-pattern>
+	<exclude-pattern>/bin/</exclude-pattern>
+	<exclude-pattern>*/build/*</exclude-pattern>
+
+	<!-- 実行時オプション -->
+	<arg name="extensions" value="php"/>
+	<arg name="basepath" value="."/>
+	<arg name="colors"/>
+	<arg name="parallel" value="8"/>
+	<arg value="sp"/>
+
+	<!-- WordPress コーディング規約 -->
+	<rule ref="WordPress">
+		<!-- 既存のファイル命名（class-image.php 等の短縮名）を踏襲するため除外 -->
+		<exclude name="WordPress.Files.FileName.InvalidClassFileName"/>
+		<exclude name="WordPress.Files.FileName.NotHyphenatedLowercase"/>
+		<!-- _wix_post_id 等のメタ照合は重複防止に必須かつ posts_per_page=1 で限定済み -->
+		<exclude name="WordPress.DB.SlowDBQuery.slow_db_query_meta_key"/>
+		<exclude name="WordPress.DB.SlowDBQuery.slow_db_query_meta_value"/>
+		<exclude name="WordPress.DB.SlowDBQuery.slow_db_query_meta_query"/>
+		<!-- docblock の句読点・記述完全性に関する過度に厳格なルールは緩和する -->
+		<!-- （ファイル/関数 docblock の有無自体は引き続き必須とする） -->
+		<exclude name="Squiz.Commenting.InlineComment.InvalidEndChar"/>
+		<exclude name="Squiz.Commenting.FunctionComment.MissingParamComment"/>
+		<exclude name="Squiz.Commenting.FunctionComment.ParamCommentFullStop"/>
+		<exclude name="Generic.Commenting.DocComment.MissingShort"/>
+		<exclude name="Generic.Commenting.DocComment.ShortNotCapital"/>
+		<exclude name="Generic.Commenting.DocComment.LongNotCapital"/>
+	</rule>
+
+	<!-- 最低 WP バージョン / PHP バージョン -->
+	<config name="minimum_wp_version" value="6.0"/>
+	<config name="testVersion" value="7.4-"/>
+	<rule ref="PHPCompatibilityWP">
+		<include-pattern>*\.php$</include-pattern>
+	</rule>
+
+	<!-- テキストドメイン -->
+	<rule ref="WordPress.WP.I18n">
+		<properties>
+			<property name="text_domain" type="array">
+				<element value="next-wix2wp"/>
+			</property>
+		</properties>
+	</rule>
+
+	<!-- プレフィックス（グローバル名前空間の汚染防止） -->
+	<rule ref="WordPress.NamingConventions.PrefixAllGlobals">
+		<properties>
+			<property name="prefixes" type="array">
+				<element value="NExT_Wix2WP"/>
+				<element value="NEXT_WIX2WP"/>
+				<element value="wix2wp"/>
+			</property>
+		</properties>
+	</rule>
+</ruleset>
