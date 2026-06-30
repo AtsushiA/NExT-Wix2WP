@@ -3,7 +3,7 @@
  * Plugin Name:       NExT Wix2WP
  * Plugin URI:        https://github.com/AtsushiA/NExT-Wix2WP
  * Description:       WixブログをWordPressの投稿としてインポートするWP-CLIプラグイン
- * Version:           1.0.0
+ * Version:           1.0.1
  * Requires at least: 6.0
  * Requires PHP:      7.4
  * Author:            NExT-Season
@@ -17,7 +17,7 @@
 
 defined( 'ABSPATH' ) || exit;
 
-define( 'NEXT_WIX2WP_VERSION', '1.0.0' );
+define( 'NEXT_WIX2WP_VERSION', '1.0.1' );
 define( 'NEXT_WIX2WP_DIR', plugin_dir_path( __FILE__ ) );
 
 require_once NEXT_WIX2WP_DIR . 'includes/class-wix-api.php';

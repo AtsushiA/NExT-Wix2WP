@@ -15,7 +15,7 @@ class PluginTest extends WP_UnitTestCase {
 	 */
 	public function test_plugin_constants_defined() {
 		$this->assertTrue( defined( 'NEXT_WIX2WP_VERSION' ) );
-		$this->assertSame( '1.0.0', NEXT_WIX2WP_VERSION );
+		$this->assertSame( '1.0.1', NEXT_WIX2WP_VERSION );
 	}
 
 	/**
