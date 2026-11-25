@@ -1,5 +1,7 @@
 # NExT Wix2WP
 
+[![Try in WordPress Playground](https://img.shields.io/badge/Try%20in-WordPress%20Playground-3858e9?logo=wordpress)](https://playground.wordpress.net/?blueprint-url=https://raw.githubusercontent.com/AtsushiA/NExT-Wix2WP/main/blueprint.json)
+
 Wix ブログを WordPress の投稿として WP-CLI 経由でインポートするプラグインです。
 
 ---

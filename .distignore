@@ -21,3 +21,4 @@
 *.zip
 .phpunit.result.cache
 .DS_Store
+/blueprint.json
